@@ -4,8 +4,9 @@ package com.program.bot.service;
 import com.program.bot.entity.Notification;
 import com.program.bot.entity.Person;
 import com.program.bot.repository.NotificationRepo;
-import com.program.bot.repository.PersonRepo;
 import jakarta.transaction.Transactional;
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.stereotype.Service;
@@ -17,10 +18,11 @@ import java.time.format.DateTimeParseException;
 import java.util.List;
 
 @Slf4j
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @Service
 public class NotificationService {
 
-    private final NotificationRepo notificationRepo;
+    final NotificationRepo notificationRepo;
 
     public NotificationService(NotificationRepo notificationRepo) {
         this.notificationRepo = notificationRepo;
@@ -65,7 +67,7 @@ public class NotificationService {
     public String findAllPersonNotifications(Person person) {
         String date;
         List<Notification> notifications = notificationRepo.findAllByPerson(person);
-        if(notifications.isEmpty()){
+        if (notifications.isEmpty()) {
             return "Ты пока что не добавил ни одного события. Добавляй скорее ;)";
         }
         StringBuilder stringBuilder = new StringBuilder();

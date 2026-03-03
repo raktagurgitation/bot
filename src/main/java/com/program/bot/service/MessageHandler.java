@@ -1,25 +1,15 @@
 package com.program.bot.service;
 
 
-import com.program.bot.config.BotConfig;
 import com.program.bot.entity.Person;
-import com.program.bot.keyboard.ReplyKeyboard;
 import com.program.bot.service.sheduler.ScheduleSpamming;
 import com.program.bot.utils.BotCommands;
-import com.program.bot.utils.StateType;
 import lombok.AccessLevel;
-import lombok.SneakyThrows;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.telegram.telegrambots.client.okhttp.OkHttpTelegramClient;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import org.telegram.telegrambots.meta.generics.TelegramClient;
-
-import java.util.List;
-
 
 import static com.program.bot.utils.BotCommands.*;
 import static com.program.bot.utils.StateType.*;
@@ -87,8 +77,8 @@ public class MessageHandler {
             if (messageText.equals(START.getCommand())) {
                 sendService.sendMessageWithKeyboardMENU(chatId,
                         """
-                        Отлично. А теперь давай создадим твое 1 событие. Перейди во вкладку события и нажми создать :)
-                        """);
+                                Отлично. А теперь давай создадим твое 1 событие. Перейди во вкладку события и нажми создать :)
+                                """);
                 return;
             }
             if (messageText.equals(HELP.getCommand())) {
@@ -96,16 +86,20 @@ public class MessageHandler {
                         START.getCommand() + ", " + HELP.getCommand() + ", " + LOVE.getCommand() + ", " + NEW_NOTIFICATION_INLINE.getCommand() + ".");
                 return;
             }
-            if (messageText.equals(LOVE.getCommand())) {
-                sendService.sendMessage(chatId, "Люблю Владочку :)");
-                return;
-            }
+//            if (messageText.equals(LOVE.getCommand())) {
+//                sendService.sendMessage(chatId, "Люблю Владочку :)");
+//                return;
+//            }
             if (messageText.equals(ABOUT.getCommand())) {
                 sendService.sendMessage(chatId, "Запуск 23.02.2026. Функционал находится в разработке.");
                 return;
             }
             if (messageText.equals(TO_NOTIFICATIONS.getCommand())) {
                 sendService.sendMessageWithKeyboardNOTIFICATION(chatId, "Вы перешли в режим работы с событиями.");
+                return;
+            }
+            if (messageText.equals(GET_JOKE.getCommand())) {
+                sendService.sendJoke(chatId);
                 return;
             }
 
@@ -127,9 +121,9 @@ public class MessageHandler {
                 return;
             }
 
-        } else  {
+        } else {
             // Если нет никакой команды
-            if(person.getState().equals(NORMAL.name())) {
+            if (person.getState().equals(NORMAL.name())) {
                 sendService.sendInfoMessage(chatId, update);
                 return;
             }
@@ -148,7 +142,7 @@ public class MessageHandler {
 
     private boolean checkMessageIsCommand(String text) {
 
-        for (int i = 0; i<BotCommands.values().length; i++) {
+        for (int i = 0; i < BotCommands.values().length; i++) {
             if (BotCommands.values()[i].getCommand().equals(text)) {
                 return true;
             }
