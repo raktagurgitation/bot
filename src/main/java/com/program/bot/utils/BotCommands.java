@@ -16,7 +16,8 @@ public enum BotCommands {
     NEW_NOTIFICATION("Создать \uD83D\uDCDD"),
     NEW_NOTIFICATION_INLINE("/new_event"),
     VIEW_NOTIFICATIONS("Просмотр моих событий \uD83D\uDD0E"),
-    DELETE_NOTIFICATIONS("Удалить \uD83D\uDDD1\uFE0F");
+    DELETE_NOTIFICATIONS("Удалить \uD83D\uDDD1\uFE0F"),
+    GET_JOKE("/joke");
 
 
 

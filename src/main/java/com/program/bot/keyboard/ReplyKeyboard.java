@@ -17,7 +17,7 @@ public class ReplyKeyboard {
 
         KeyboardRow row1 = new KeyboardRow();
         row1.add(HELP.getCommand());
-        row1.add(LOVE.getCommand());
+        row1.add(GET_JOKE.getCommand());
         KeyboardRow row2 = new KeyboardRow();
         row2.add(ABOUT.getCommand());
         row2.add(TO_NOTIFICATIONS.getCommand());
