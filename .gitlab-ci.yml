@@ -1,0 +1,22 @@
+stages:
+  - build
+  - test
+
+# Этап компиляции проекта
+build_project:
+  stage: build
+  tags:
+    - bot # Этот тег должен совпадать с тегом раннера на вашем скриншоте
+  script:
+    - "./mvnw clean compile"
+  artifacts:
+    paths:
+      - target/
+
+# Этап запуска тестов
+run_tests:
+  stage: test
+  tags:
+    - bot
+  script:
+    - "./mvnw test"
