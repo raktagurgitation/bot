@@ -9,6 +9,7 @@ import lombok.experimental.FieldDefaults;
 @Setter
 @Getter
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@ToString
 public class JokeDto {
 
     String setup;

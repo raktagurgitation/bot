@@ -132,6 +132,7 @@ public class SendMessageService{
         telegramClient.execute(action);
 
         JokeDto joke = jokeService.getJoke();
+
         SendMessage sendSetup = SendMessage.builder()
                 .chatId(chatId)
                 .text(joke.getSetup() + " \uD83E\uDD14")
