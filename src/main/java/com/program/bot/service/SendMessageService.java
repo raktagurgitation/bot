@@ -3,6 +3,7 @@ package com.program.bot.service;
 import com.program.bot.config.BotConfig;
 import com.program.bot.dto.JokeDto;
 import com.program.bot.entity.Person;
+import com.program.bot.keyboard.InlineKeyboard;
 import com.program.bot.keyboard.ReplyKeyboard;
 import com.program.bot.utils.StateType;
 import lombok.AccessLevel;
@@ -13,6 +14,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.client.okhttp.OkHttpTelegramClient;
 import org.telegram.telegrambots.meta.api.methods.ActionType;
+import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.methods.send.SendChatAction;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -37,8 +39,9 @@ public class SendMessageService{
     final SchedulerService schedulerService;
     final JokeService jokeService;
     final ScheduledExecutorService scheduler;
+    final InlineKeyboard inlineKeyboard;
 
-    public SendMessageService(BotConfig botConfig, NotificationService notificationService, ReplyKeyboard replyKeyboard, PersonService personService, SchedulerService schedulerService, JokeService jokeService, ScheduledExecutorService scheduledExecutorService) {
+    public SendMessageService(BotConfig botConfig, NotificationService notificationService, ReplyKeyboard replyKeyboard, PersonService personService, SchedulerService schedulerService, JokeService jokeService, ScheduledExecutorService scheduledExecutorService, InlineKeyboard inlineKeyboard) {
         this.telegramClient = new OkHttpTelegramClient(botConfig.getToken());
         this.notificationService = notificationService;
         this.replyKeyboard = replyKeyboard;
@@ -46,6 +49,7 @@ public class SendMessageService{
         this.schedulerService = schedulerService;
         this.jokeService = jokeService;
         this.scheduler = scheduledExecutorService;
+        this.inlineKeyboard = inlineKeyboard;
     }
 
     @SneakyThrows
@@ -53,6 +57,17 @@ public class SendMessageService{
         SendMessage message = SendMessage.builder()
                 .chatId(chatId)
                 .text(text)
+                .build();
+        log.info("Sending message with chatID " + chatId);
+        telegramClient.execute(message);
+    }
+
+    @SneakyThrows
+    public void sendMessageBackToMenuButton(long chatId, String text) {
+        SendMessage message = SendMessage.builder()
+                .chatId(chatId)
+                .text(text)
+                .replyMarkup(inlineKeyboard.backToMenuKeyboardMarkup())
                 .build();
         log.info("Sending message with chatID " + chatId);
         telegramClient.execute(message);
@@ -74,7 +89,7 @@ public class SendMessageService{
         SendMessage message = SendMessage.builder()
                 .chatId(chatId)
                 .text(text)
-                .replyMarkup(replyKeyboard.getReplyKeyboardMarkupMENU())
+                .replyMarkup(inlineKeyboard.getMenuListKeyboardMarkup())
                 .build();
         log.info("Sending message with chatID " + chatId);
         telegramClient.execute(message);
@@ -92,11 +107,24 @@ public class SendMessageService{
     }
 
     @SneakyThrows
+    public void sendMessageAndChangeStateWithBackButton(Person person, StateType type, String text) {
+        SendMessage message = SendMessage.builder()
+                .chatId(person.getChatId())
+                .text(text)
+                .replyMarkup(inlineKeyboard.backToNotificationsKeyboardMarkup())
+                .build();
+        personService.changeState(person, type);
+        log.info("Sending message with chatID " + person.getChatId());
+        telegramClient.execute(message);
+    }
+
+    @SneakyThrows
     public void sendMessageWithAllPersonNotifications(Person person) {
         String allNotifications = notificationService.findAllPersonNotifications(person);
         SendMessage sendMessage = SendMessage.builder()
                 .chatId(person.getChatId())
                 .text(allNotifications)
+                .replyMarkup(inlineKeyboard.backToNotificationsKeyboardMarkup())
                 .build();
         log.info("Sending info of all notifications with chatID " + person.getChatId());
         telegramClient.execute(sendMessage);
@@ -118,7 +146,7 @@ public class SendMessageService{
         SendMessage sendMessage = SendMessage.builder()
                 .chatId(chatId)
                 .text(text)
-                .replyMarkup(replyKeyboard.getReplyKeyboardMarkupNOTIFICATIONS())
+                .replyMarkup(inlineKeyboard.getNotificationMenuKeyboardMarkup())
                 .build();
         telegramClient.execute(sendMessage);
     }
@@ -141,6 +169,7 @@ public class SendMessageService{
         SendMessage sendPunchline = SendMessage.builder()
                 .chatId(chatId)
                 .text(joke.getPunchline() + " \uD83D\uDE02 \uD83E\uDD23")
+                .replyMarkup(inlineKeyboard.getNextJokeKeyboardMarkup())
                 .build();
 
         telegramClient.execute(sendSetup);
@@ -148,10 +177,20 @@ public class SendMessageService{
         scheduler.schedule(()-> {
             try {
                 telegramClient.execute(sendPunchline);
+
             } catch (TelegramApiException e) {
                 throw new RuntimeException(e);
             }
-        },4, TimeUnit.SECONDS);
+        },2, TimeUnit.SECONDS);
+    }
+
+    @SneakyThrows
+    public void answerCallback(String callbackQueryId){
+        AnswerCallbackQuery answer = AnswerCallbackQuery.builder()
+                .callbackQueryId(callbackQueryId)
+                .build();
+        telegramClient.execute(answer);
+
     }
 
 

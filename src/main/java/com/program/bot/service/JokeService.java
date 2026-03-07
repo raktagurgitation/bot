@@ -4,6 +4,7 @@ import com.program.bot.dto.JokeDto;
 import com.program.bot.dto.JokeResponseDto;
 import com.program.bot.dto.TranslateRequestDto;
 import com.program.bot.dto.TranslateResponseDto;
+import com.program.bot.keyboard.InlineKeyboard;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;

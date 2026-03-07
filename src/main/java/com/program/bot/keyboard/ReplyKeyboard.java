@@ -13,8 +13,6 @@ public class ReplyKeyboard {
 
     public ReplyKeyboardMarkup getReplyKeyboardMarkupMENU() {
 
-
-
         KeyboardRow row1 = new KeyboardRow();
         row1.add(HELP.getCommand());
         row1.add(GET_JOKE.getCommand());
