@@ -3,7 +3,6 @@ package com.program.bot.service;
 
 import com.program.bot.entity.Person;
 import com.program.bot.service.sheduler.ScheduleSpamming;
-import com.program.bot.utils.BotCommands;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
@@ -35,98 +34,103 @@ public class MessageHandler {
 
     public void handleCommand(Update update) {
 
-        String messageText = update.getMessage().getText();
-        long chatId = update.getMessage().getChatId();
-        Person person = personService.findById(chatId);
+        // Блок работы с CallbackQuery
+        if (update.hasCallbackQuery()) {
 
-        // Режим ввода названия события для создания
-        if (person.getState().equals(WAITING_NAME.name())) {
-            notificationService.setNotificationName(person, messageText);
-            sendService.sendMessageAndChangeState(person, WAITING_DATA,
-                    "Отлично, а теперь введите дату. Формат должен быть следующий: 0000 00 00. Например - 2026 05 19");
-            return;
-        }
+            // Получаем данные для работы
+            String callbackQuery = update.getCallbackQuery().getData();
+            String queryId = update.getCallbackQuery().getId();
+            long chatId = update.getCallbackQuery().getMessage().getChatId();
+            Person person = personService.findById(chatId);
 
-        // Режим ввода даты события
-        else if (person.getState().equals(WAITING_DATA.name())) {
-            String check = checkDate(messageText);
-            if (check != null) {
-                sendService.sendMessage(person.getChatId(), check);
-            } else {
-                notificationService.setNotificationDate(person, messageText);
-                sendService.sendMessageAndChangeState(person, NORMAL, "Вы успешно установили уведомление на событие!");
-            }
-            return;
-        }
 
-        // Режим ввода названия события для удаления
-        else if (person.getState().equals(WAITING_DELETE.name())) {
-            String result = notificationService.deleteByName(person, messageText);
-            if (result != null) {
-                sendService.sendMessage(person.getChatId(), result);
-
-            } else {
-                sendService.sendMessageAndChangeState(person, NORMAL, "Событие успешно удалено");
-            }
-            return;
-        }
-
-        // Нормальный режим
-        if (checkMessageIsCommand(messageText) && person.getState().equals(NORMAL.name())) {
-            // Блок MENU
-            if (messageText.equals(START.getCommand())) {
-                sendService.sendMessageWithKeyboardMENU(chatId,
-                        """
-                                Отлично. А теперь давай создадим твое 1 событие. Перейди во вкладку события и нажми создать :)
-                                """);
-                return;
-            }
-            if (messageText.equals(HELP.getCommand())) {
-                sendService.sendMessage(chatId, "Я поддерживаю следующие команды: " +
-                        START.getCommand() + ", " + HELP.getCommand() + ", " + LOVE.getCommand() + ", " + NEW_NOTIFICATION_INLINE.getCommand() + ".");
-                return;
-            }
-//            if (messageText.equals(LOVE.getCommand())) {
-//                sendService.sendMessage(chatId, "Люблю Владочку :)");
-//                return;
-//            }
-            if (messageText.equals(ABOUT.getCommand())) {
-                sendService.sendMessage(chatId, "Запуск 23.02.2026. Функционал находится в разработке.");
-                return;
-            }
-            if (messageText.equals(TO_NOTIFICATIONS.getCommand())) {
-                sendService.sendMessageWithKeyboardNOTIFICATION(chatId, "Вы перешли в режим работы с событиями.");
-                return;
-            }
-            if (messageText.equals(GET_JOKE.getCommand())) {
+            if (callbackQuery.equals(GET_JOKE.getCommand())) {
+                sendService.answerCallback(queryId);
                 sendService.sendJoke(chatId);
                 return;
             }
-
-            // Блок NOTIFICATION
-            if (messageText.equals(BACK_TO_MENU.getCommand())) {
-                sendService.sendMessageWithKeyboardMENU(chatId, "Вы вернулись в меню");
+            if (callbackQuery.equals(HELP.getCommand())) {
+                sendService.answerCallback(queryId);
+                sendService.sendMessageBackToMenuButton(chatId, """
+                        Для того, что бы создать событие, нажми в меню кнопку 'К событиям'. Затем создай новое событие.
+                        Для того, что бы получить шутку нажми в меню 'Шутка'.
+                        """);
                 return;
             }
-            if (messageText.equals(NEW_NOTIFICATION.getCommand()) || messageText.equals(NEW_NOTIFICATION_INLINE.getCommand())) {
+            if (callbackQuery.equals(ABOUT.getCommand())) {
+                sendService.answerCallback(queryId);
+                sendService.sendMessageBackToMenuButton(chatId, "Запуск 23.02.2026. Функционал находится в разработке.");
+                return;
+            }
+            if (callbackQuery.equals(TO_NOTIFICATIONS.getCommand())) {
+                sendService.answerCallback(queryId);
+                sendService.sendMessageWithKeyboardNOTIFICATION(chatId, "Вы перешли в режим работы с событиями.");
+                return;
+            }
+            if (callbackQuery.equals(BACK_TO_MENU.getCommand())) {
+                sendService.answerCallback(queryId);
+                sendService.sendMessageWithKeyboardMENU(chatId, "Вы вернулись в меню. Выберите действие");
+                return;
+            }
+            if (callbackQuery.equals(NEW_NOTIFICATION.getCommand())) {
+                sendService.answerCallback(queryId);
                 sendService.sendMessageAndChangeState(person, WAITING_NAME, "Вы приступили к созданию события! Введите название.");
                 return;
             }
-            if (messageText.equals(VIEW_NOTIFICATIONS.getCommand())) {
+            if (callbackQuery.equals(VIEW_NOTIFICATIONS.getCommand())) {
+                sendService.answerCallback(queryId);
                 sendService.sendMessageWithAllPersonNotifications(person);
                 return;
             }
-            if (messageText.equals(DELETE_NOTIFICATIONS.getCommand())) {
+            if (callbackQuery.equals(DELETE_NOTIFICATIONS.getCommand())) {
+                sendService.answerCallback(queryId);
                 sendService.sendMessageAndChangeState(person, WAITING_DELETE, "Введите название события для его удаления.");
                 return;
             }
+        } else if (update.hasMessage()) {
 
-        } else {
-            // Если нет никакой команды
-            if (person.getState().equals(NORMAL.name())) {
+            String messageText = update.getMessage().getText();
+            long chatId = update.getMessage().getChatId();
+            Person person = personService.findById(chatId);
+
+            if (messageText.equals(START.getCommand())) {
+                sendService.sendMessageWithKeyboardMENU(chatId,
+                        """
+                                Ну что же, давай начнем!
+                                Выбери пункт ниже, что ты хочешь сделать.
+                                """);
+                return;
+            }
+            // Режим ввода названия события для создания
+            if (person.getState().equals(WAITING_NAME.name())) {
+                notificationService.setNotificationName(person, messageText);
+                sendService.sendMessageAndChangeState(person, WAITING_DATA,
+                        "Отлично, а теперь введите дату. Формат должен быть следующий: 0000 00 00. Например - 2026 05 19");
+                return;
+            } else if (person.getState().equals(WAITING_DATA.name())) {
+                String check = checkDate(messageText);
+                if (check != null) {
+                    sendService.sendMessage(person.getChatId(), check);
+                } else {
+                    notificationService.setNotificationDate(person, messageText);
+                    sendService.sendMessageAndChangeStateWithBackButton(person, NORMAL, "Вы успешно установили уведомление на событие!");
+                }
+                return;
+            } else if (person.getState().equals(WAITING_DELETE.name())) {
+                String result = notificationService.deleteByName(person, messageText);
+                if (result != null) {
+                    sendService.sendMessage(person.getChatId(), result);
+
+                } else {
+                    sendService.sendMessageAndChangeStateWithBackButton(person, NORMAL, "Событие успешно удалено");
+                }
+                return;
+            } else if (person.getState().equals(NORMAL.name())) {
+                // Если нет никакой команды
                 sendService.sendInfoMessage(chatId, update);
                 return;
             }
+
         }
     }
 
@@ -140,18 +144,7 @@ public class MessageHandler {
         return null;
     }
 
-    private boolean checkMessageIsCommand(String text) {
-
-        for (int i = 0; i < BotCommands.values().length; i++) {
-            if (BotCommands.values()[i].getCommand().equals(text)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    @Scheduled(cron = "0 0 20 * * *")
+    @Scheduled(cron = "0 33 22 * * *")
     private void sendDailyNotification() {
         scheduleSpamming.sendDailyNotification();
     }

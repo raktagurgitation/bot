@@ -25,7 +25,7 @@ public class ScheduleSpamming {
         personRepo.findAll().forEach(person -> {
             SendMessage sendMessage = SendMessage.builder()
                     .chatId(person.getChatId())
-                    .text("Приветик " + person.getFirstName())
+                    .text("Чмоки чмоки " + person.getFirstName())
                     .build();
             try {
                 telegramClient.execute(sendMessage);

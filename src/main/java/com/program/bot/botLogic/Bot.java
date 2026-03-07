@@ -44,10 +44,11 @@ public class Bot implements SpringLongPollingBot, LongPollingUpdateConsumer {
     @Override
     public void consume(List<Update> updates) {
         updates.forEach(update -> {
-            if (update.hasMessage() && update.getMessage().hasText()) {
+            System.out.println("работаю");
+            if (update.hasMessage()) {
                 personService.register(update.getMessage());
-                messageHandler.handleCommand(update);
             }
+            messageHandler.handleCommand(update);
         });
 
     }
